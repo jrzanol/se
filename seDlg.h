@@ -19,12 +19,16 @@ public:
 		if (Res)
 			delete Res;
 	}
-
-private:
-	SqlRes() { }
+	bool CheckResult()
+	{
+		return Sta != nullptr && Res != nullptr && Res->next();
+	}
 
 	sql::Statement* Sta;
 	sql::ResultSet* Res;
+
+private:
+	SqlRes() { }
 };
 
 // caixa de diálogo CseDlg
@@ -48,6 +52,11 @@ private:
 
 	SqlRes SqlQuery(const char*, ...);
 
+	char m_CenterCode[16];
+
+	void RefreshLists();
+	void RefreshObjects();
+
 // Implementação
 protected:
 	HICON m_hIcon;
@@ -58,4 +67,19 @@ protected:
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
+public:
+	CEdit m_CpfTxt;
+	CEdit m_PwdTxt;
+	afx_msg void OnBnClickedLoginbutton();
+	CListBox m_Motoristas;
+	CListBox m_Destinos;
+	CListBox m_Objetos;
+	CEdit m_CodigoTxt;
+	CEdit m_DestinoTxt;
+	CButton m_AllButton;
+	CButton m_LoginButton;
+	afx_msg void OnEnChangeCodigoedit();
+	afx_msg void OnEnChangeDestedit();
+	afx_msg void OnBnClickedButtonall();
+	afx_msg void OnLbnSelchangeListobjetos();
 };

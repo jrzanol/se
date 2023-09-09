@@ -59,12 +59,26 @@ CseDlg::CseDlg(CWnd* pParent /*=nullptr*/)
 void CseDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_CPFEDIT, m_CpfTxt);
+	DDX_Control(pDX, IDC_PWDEDIT, m_PwdTxt);
+	DDX_Control(pDX, IDC_LISTMOTORISTA, m_Motoristas);
+	DDX_Control(pDX, IDC_LISTDESTINO, m_Destinos);
+	DDX_Control(pDX, IDC_LISTOBJETOS, m_Objetos);
+	DDX_Control(pDX, IDC_CODIGOEDIT, m_CodigoTxt);
+	DDX_Control(pDX, IDC_DESTEDIT, m_DestinoTxt);
+	DDX_Control(pDX, IDC_BUTTONALL, m_AllButton);
+	DDX_Control(pDX, IDC_LOGINBUTTON, m_LoginButton);
 }
 
 BEGIN_MESSAGE_MAP(CseDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
+	ON_BN_CLICKED(IDC_LOGINBUTTON, &CseDlg::OnBnClickedLoginbutton)
+	ON_EN_CHANGE(IDC_CODIGOEDIT, &CseDlg::OnEnChangeCodigoedit)
+	ON_EN_CHANGE(IDC_DESTEDIT, &CseDlg::OnEnChangeDestedit)
+	ON_BN_CLICKED(IDC_BUTTONALL, &CseDlg::OnBnClickedButtonall)
+	ON_LBN_SELCHANGE(IDC_LISTOBJETOS, &CseDlg::OnLbnSelchangeListobjetos)
 END_MESSAGE_MAP()
 
 
@@ -108,10 +122,16 @@ BOOL CseDlg::OnInitDialog()
 		/* Connect to the MySQL database */
 		con->setSchema("pbd");
 	}
-	catch (sql::SQLException& e) {
+	catch (sql::SQLException& e)
+	{
 		MessageBox(e.what(), "Connect MySQL failed!!", MB_OK | MB_ICONEXCLAMATION);
 		ExitProcess(-1);
 	}
+
+#ifdef _DEBUG
+	m_CpfTxt.SetWindowTextA("000-111-222-01");
+	m_PwdTxt.SetWindowTextA("admin");
+#endif
 
 	return TRUE;  // retorna TRUE a não ser que você ajuste o foco para um controle
 }
@@ -189,3 +209,145 @@ HCURSOR CseDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
+void CseDlg::RefreshLists()
+{
+	SqlRes mot = SqlQuery("SELECT CPF,Nome FROM Usuario WHERE codigoCentro='%s' AND TipoUsuario=1", m_CenterCode);
+
+	if (mot.CheckResult())
+	{
+		m_Motoristas.ResetContent();
+		int index = 0;
+
+		do
+		{
+			char item[256];
+			sprintf(item, "%s, %s", mot.Res->getString("CPF").c_str(), mot.Res->getString("Nome").c_str());
+
+			m_Motoristas.InsertString(index++, item);
+		} while (mot.Res->next());
+	}
+
+	SqlRes dest = SqlQuery("SELECT Codigo,Cidade FROM Centro");
+
+	if (dest.CheckResult())
+	{
+		m_Destinos.ResetContent();
+		int index = 0;
+
+		do
+		{
+			char item[256];
+			sprintf(item, "%s, %s", dest.Res->getString("Codigo").c_str(), dest.Res->getString("Cidade").c_str());
+
+			m_Destinos.InsertString(index++, item);
+		} while (dest.Res->next());
+	}
+
+	RefreshObjects();
+}
+
+void CseDlg::RefreshObjects()
+{
+	SqlRes objs = SqlQuery("SELECT Codigo, CidadeDestino, EstadoDestino FROM Objetos WHERE codigoCentro='%s'", m_CenterCode);
+
+	if (objs.CheckResult())
+	{
+		m_Objetos.ResetContent();
+		int index = 0;
+
+		char cod[32];
+		char des[32];
+
+		m_CodigoTxt.GetWindowTextA(cod, sizeof(cod));
+		m_DestinoTxt.GetWindowTextA(des, sizeof(des));
+
+		do
+		{
+			char codigoStr[32];
+			char cidadeStr[32];
+			char estadoStr[32];
+
+			strcpy(codigoStr, objs.Res->getString("Codigo").c_str());
+			strcpy(cidadeStr, objs.Res->getString("CidadeDestino").c_str());
+			strcpy(estadoStr, objs.Res->getString("EstadoDestino").c_str());
+
+			bool isEmpty = (cod[0] == 0 && des[0] == 0);
+			bool codStr = (StrStrI(codigoStr, cod));
+			bool destStr = (StrStrI(cidadeStr, des) || StrStrI(estadoStr, des));
+
+			if (isEmpty || codStr || destStr)
+			{
+				char item[256];
+				sprintf(item, "%s, %s,%s", codigoStr, cidadeStr, estadoStr);
+
+				m_Objetos.InsertString(index++, item);
+			}
+		} while (objs.Res->next());
+	}
+}
+
+void CseDlg::OnBnClickedLoginbutton()
+{
+	char cpf[32];
+	char pwd[32];
+
+	m_CpfTxt.GetWindowTextA(cpf, sizeof(cpf));
+	m_PwdTxt.GetWindowTextA(pwd, sizeof(pwd));
+
+	SqlRes res = SqlQuery("SELECT * FROM Usuario WHERE CPF='%s' AND Senha='%s'", cpf, pwd);
+
+	if (res.CheckResult())
+	{
+		strcpy(m_CenterCode, res.Res->getString("codigoCentro").c_str());
+
+		m_CpfTxt.EnableWindow(0);
+		m_PwdTxt.EnableWindow(0);
+		m_LoginButton.EnableWindow(0);
+
+		m_CodigoTxt.EnableWindow();
+		m_DestinoTxt.EnableWindow();
+		m_AllButton.EnableWindow();
+
+		m_Motoristas.EnableWindow();
+		m_Destinos.EnableWindow();
+		m_Objetos.EnableWindow();
+
+		m_CodigoTxt.Clear();
+		m_DestinoTxt.Clear();
+
+		RefreshLists();
+	}
+	else
+		MessageBox("CPF ou Senha incorretas!", "Falha ao Logar", MB_OK | MB_ICONERROR);
+}
+
+void CseDlg::OnEnChangeCodigoedit()
+{
+	RefreshObjects();
+}
+
+void CseDlg::OnEnChangeDestedit()
+{
+	RefreshObjects();
+}
+
+void CseDlg::OnBnClickedButtonall()
+{
+	for (int i = 0; i < m_Objetos.GetCount(); ++i)
+		m_Objetos.SetSel(i);
+}
+
+void CseDlg::OnLbnSelchangeListobjetos()
+{
+	int selId = m_Objetos.GetCurSel();
+	if (selId >= 0)
+	{
+		char item[256];
+		m_Objetos.GetText(selId, item);
+
+		char str[32];
+		sprintf(str, "%d", m_Objetos.GetSel(selId));
+
+		MessageBox(item, str);
+	}
+}

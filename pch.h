@@ -23,4 +23,6 @@
 #include <cppconn/resultset.h>
 #include <cppconn/statement.h>
 
+#include <shlwapi.h>
+
 #endif //PCH_H

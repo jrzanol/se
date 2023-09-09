@@ -38,11 +38,11 @@
     <ClCompile Include="se.cpp">
       <Filter>Arquivos de Origem</Filter>
     </ClCompile>
-    <ClCompile Include="seDlg.cpp">
-      <Filter>Arquivos de Origem</Filter>
-    </ClCompile>
     <ClCompile Include="pch.cpp">
       <Filter>Arquivos de Origem</Filter>
+    </ClCompile>
+    <ClCompile Include="seDlg.cpp">
+      <Filter>Arquivos de Recurso</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
