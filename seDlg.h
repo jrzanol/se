@@ -57,6 +57,9 @@ private:
 	void RefreshLists();
 	void RefreshObjects();
 
+	void DeselectObjectList(const char*);
+	bool CheckObjectInTransport(const char*);
+
 // Implementação
 protected:
 	HICON m_hIcon;
@@ -82,4 +85,11 @@ public:
 	afx_msg void OnEnChangeDestedit();
 	afx_msg void OnBnClickedButtonall();
 	afx_msg void OnLbnSelchangeListobjetos();
+	afx_msg void OnBnClickedSendbutton();
+	afx_msg void OnBnClickedRemselbutton();
+	afx_msg void OnBnClickedRemallbutton();
+	CListBox m_ObjectSend;
+	CButton m_SendButton;
+	CButton m_RemoveSelButton;
+	CButton m_RemoveAllButton;
 };

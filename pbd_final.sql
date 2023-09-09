@@ -29,7 +29,7 @@ CREATE TABLE pbd.Usuario (
 );
 
 CREATE TABLE pbd.Transporte (
-    DataSaida DATE,
+    DataSaida DATETIME,
     codigoCentro VARCHAR(8),
     cpfMotorista VARCHAR(32),
 	PRIMARY KEY(DataSaida),
@@ -54,7 +54,7 @@ CREATE TABLE pbd.Objetos (
 );
 
 CREATE TABLE pbd.Transporte_Objetos (
-    dataSaidaTransporte DATE,
+    dataSaidaTransporte DATETIME,
     codigoObjeto VARCHAR(32),
     codigoCentro VARCHAR(8),
 	FOREIGN KEY(dataSaidaTransporte) REFERENCES pbd.Transporte (DataSaida),
@@ -67,7 +67,7 @@ CREATE TABLE pbd.Despacho (
     codigoCentro VARCHAR(8),
     codigoObjeto VARCHAR(32),
     EntradaSaida BOOLEAN,
-    Data DATE,
+    Data DATETIME,
     CpfRg VARCHAR(32),
 	PRIMARY KEY(EntradaSaida),
 	FOREIGN KEY(cpfUsuario) REFERENCES pbd.Usuario (CPF),

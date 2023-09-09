@@ -68,6 +68,10 @@ void CseDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_DESTEDIT, m_DestinoTxt);
 	DDX_Control(pDX, IDC_BUTTONALL, m_AllButton);
 	DDX_Control(pDX, IDC_LOGINBUTTON, m_LoginButton);
+	DDX_Control(pDX, IDC_LISTOBJETOS2, m_ObjectSend);
+	DDX_Control(pDX, IDC_SENDBUTTON, m_SendButton);
+	DDX_Control(pDX, IDC_REMSELBUTTON, m_RemoveSelButton);
+	DDX_Control(pDX, IDC_REMALLBUTTON, m_RemoveAllButton);
 }
 
 BEGIN_MESSAGE_MAP(CseDlg, CDialogEx)
@@ -79,6 +83,9 @@ BEGIN_MESSAGE_MAP(CseDlg, CDialogEx)
 	ON_EN_CHANGE(IDC_DESTEDIT, &CseDlg::OnEnChangeDestedit)
 	ON_BN_CLICKED(IDC_BUTTONALL, &CseDlg::OnBnClickedButtonall)
 	ON_LBN_SELCHANGE(IDC_LISTOBJETOS, &CseDlg::OnLbnSelchangeListobjetos)
+	ON_BN_CLICKED(IDC_SENDBUTTON, &CseDlg::OnBnClickedSendbutton)
+	ON_BN_CLICKED(IDC_REMSELBUTTON, &CseDlg::OnBnClickedRemselbutton)
+	ON_BN_CLICKED(IDC_REMALLBUTTON, &CseDlg::OnBnClickedRemallbutton)
 END_MESSAGE_MAP()
 
 
@@ -154,7 +161,13 @@ SqlRes CseDlg::SqlQuery(const char* str, ...)
 		res = stmt->executeQuery(buf);
 	}
 	catch (sql::SQLException& e) {
-		MessageBox(e.what(), "Connect MySQL failed!!", MB_OK | MB_ICONEXCLAMATION);
+		if (e.getErrorCode() != 0)
+		{
+			char errorStr[1024];
+			sprintf(errorStr, "Error Code: %d\nError: %s\nSql: %s", e.getErrorCode(), e.what(), buf);
+
+			MessageBox(errorStr, "Connect MySQL failed!!", MB_OK | MB_ICONEXCLAMATION);
+		}
 	}
 
 	return SqlRes(stmt, res);
@@ -221,7 +234,7 @@ void CseDlg::RefreshLists()
 		do
 		{
 			char item[256];
-			sprintf(item, "%s, %s", mot.Res->getString("CPF").c_str(), mot.Res->getString("Nome").c_str());
+			sprintf(item, "%s %s", mot.Res->getString("CPF").c_str(), mot.Res->getString("Nome").c_str());
 
 			m_Motoristas.InsertString(index++, item);
 		} while (mot.Res->next());
@@ -237,7 +250,7 @@ void CseDlg::RefreshLists()
 		do
 		{
 			char item[256];
-			sprintf(item, "%s, %s", dest.Res->getString("Codigo").c_str(), dest.Res->getString("Cidade").c_str());
+			sprintf(item, "%s %s", dest.Res->getString("Codigo").c_str(), dest.Res->getString("Cidade").c_str());
 
 			m_Destinos.InsertString(index++, item);
 		} while (dest.Res->next());
@@ -278,9 +291,12 @@ void CseDlg::RefreshObjects()
 			if (isEmpty || codStr || destStr)
 			{
 				char item[256];
-				sprintf(item, "%s, %s,%s", codigoStr, cidadeStr, estadoStr);
+				sprintf(item, "%s %s,%s", codigoStr, cidadeStr, estadoStr);
 
-				m_Objetos.InsertString(index++, item);
+				m_Objetos.InsertString(index, item);
+				m_Objetos.SetSel(index, CheckObjectInTransport(item));
+
+				index++;
 			}
 		} while (objs.Res->next());
 	}
@@ -312,6 +328,11 @@ void CseDlg::OnBnClickedLoginbutton()
 		m_Destinos.EnableWindow();
 		m_Objetos.EnableWindow();
 
+		m_ObjectSend.EnableWindow();
+		m_SendButton.EnableWindow();
+		m_RemoveSelButton.EnableWindow();
+		m_RemoveAllButton.EnableWindow();
+
 		m_CodigoTxt.Clear();
 		m_DestinoTxt.Clear();
 
@@ -333,8 +354,17 @@ void CseDlg::OnEnChangeDestedit()
 
 void CseDlg::OnBnClickedButtonall()
 {
+	m_ObjectSend.ResetContent();
+
 	for (int i = 0; i < m_Objetos.GetCount(); ++i)
+	{
 		m_Objetos.SetSel(i);
+
+		char item[256];
+		m_Objetos.GetText(i, item);
+
+		m_ObjectSend.AddString(item);
+	}
 }
 
 void CseDlg::OnLbnSelchangeListobjetos()
@@ -345,9 +375,116 @@ void CseDlg::OnLbnSelchangeListobjetos()
 		char item[256];
 		m_Objetos.GetText(selId, item);
 
-		char str[32];
-		sprintf(str, "%d", m_Objetos.GetSel(selId));
+		int option = m_Objetos.GetSel(selId);
+		if (option == 1)
+			m_ObjectSend.AddString(item);
+		else
+		{
+			int Id;
+			for (Id = 0; Id < m_ObjectSend.GetCount(); ++Id)
+			{
+				char listItem[256];
+				m_ObjectSend.GetText(Id, listItem);
 
-		MessageBox(item, str);
+				if (strcmp(item, listItem) == 0)
+					break;
+			}
+
+			if (Id < m_ObjectSend.GetCount())
+				m_ObjectSend.DeleteString(Id);
+		}
 	}
+}
+
+void CseDlg::OnBnClickedSendbutton()
+{
+	int motId = m_Motoristas.GetCurSel();
+	int destId = m_Destinos.GetCurSel();
+
+	if (motId >= 0 && destId >= 0)
+	{
+		char motStr[256], motCpf[32];
+		m_Motoristas.GetText(motId, motStr);
+
+		if (sscanf(motStr, "%s", motCpf) == 1)
+		{
+			time_t rawnow = time(0);
+			tm* now = localtime(&rawnow);
+
+			char dateTime[64];
+			sprintf(dateTime, "%d-%d-%d %d:%d:%d", now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
+
+			SqlQuery("INSERT INTO Transporte VALUES ('%s', '%s', '%s')", dateTime, m_CenterCode, motCpf);
+
+			//SqlQuery("INSERT INTO Transporte_Objetos VALUES ('%s', '%s', '%s')", dateTime, )
+
+			m_ObjectSend.ResetContent();
+
+			RefreshLists();
+			RefreshObjects();
+		}
+	}
+	else
+		MessageBox("Voce deve selecionar o Motorista e o Destino.");
+}
+
+void CseDlg::DeselectObjectList(const char* item)
+{
+	for (int Id = 0; Id < m_Objetos.GetCount(); ++Id)
+	{
+		if (m_Objetos.GetSel(Id) == 1)
+		{
+			char listItem[256];
+			m_Objetos.GetText(Id, listItem);
+
+			if (strcmp(item, listItem) == 0)
+			{
+				m_Objetos.SetSel(Id, 0);
+				break;
+			}
+		}
+	}
+}
+
+bool CseDlg::CheckObjectInTransport(const char* item)
+{
+	for (int Id = 0; Id < m_ObjectSend.GetCount(); ++Id)
+	{
+		char listItem[256];
+		m_ObjectSend.GetText(Id, listItem);
+
+		if (strcmp(item, listItem) == 0)
+			return true;
+	}
+
+	return false;
+}
+
+void CseDlg::OnBnClickedRemselbutton()
+{
+	int Id = 0;
+
+	while (Id < m_ObjectSend.GetCount())
+	{
+		if (m_ObjectSend.GetSel(Id) == 1)
+		{
+			char item[256];
+			m_ObjectSend.GetText(Id, item);
+			m_ObjectSend.DeleteString(Id);
+
+			DeselectObjectList(item);
+
+			Id = 0;
+		}
+		else
+			Id++;
+	}
+}
+
+void CseDlg::OnBnClickedRemallbutton()
+{
+	for (int Id = 0; Id < m_ObjectSend.GetCount(); ++Id)
+		m_ObjectSend.SetSel(Id);
+
+	OnBnClickedRemselbutton();
 }
