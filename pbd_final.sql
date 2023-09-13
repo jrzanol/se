@@ -16,6 +16,14 @@ CREATE TABLE pbd.Centro (
 	PRIMARY KEY(Codigo)
 );
 
+CREATE TABLE pbd.Distancia_Centro (
+    codigoCentro1 VARCHAR(8),
+    codigoCentro2 VARCHAR(8),
+	Distancia INTEGER,
+	FOREIGN KEY(codigoCentro1) REFERENCES pbd.Centro(Codigo),
+	FOREIGN KEY(codigoCentro2) REFERENCES pbd.Centro(Codigo)
+);
+
 CREATE TABLE pbd.Usuario (
     CPF VARCHAR(32) NOT NULL UNIQUE,
     Senha VARCHAR(32),
@@ -29,10 +37,11 @@ CREATE TABLE pbd.Usuario (
 );
 
 CREATE TABLE pbd.Transporte (
+	Saida BOOLEAN,
     DataSaida DATETIME,
     codigoCentro VARCHAR(8),
     cpfMotorista VARCHAR(32),
-	PRIMARY KEY(DataSaida),
+	PRIMARY KEY(Saida, DataSaida),
 	FOREIGN KEY(cpfMotorista) REFERENCES pbd.Usuario (CPF),
 	FOREIGN KEY(codigoCentro) REFERENCES pbd.Centro (Codigo)
 );
@@ -54,10 +63,11 @@ CREATE TABLE pbd.Objetos (
 );
 
 CREATE TABLE pbd.Transporte_Objetos (
+	saida BOOLEAN,
     dataSaidaTransporte DATETIME,
     codigoObjeto VARCHAR(32),
     codigoCentro VARCHAR(8),
-	FOREIGN KEY(dataSaidaTransporte) REFERENCES pbd.Transporte (DataSaida),
+	FOREIGN KEY(saida, dataSaidaTransporte) REFERENCES pbd.Transporte (Saida, DataSaida),
 	FOREIGN KEY(codigoObjeto) REFERENCES pbd.Objetos (Codigo),
 	FOREIGN KEY(codigoCentro) REFERENCES pbd.Centro (Codigo)
 );
@@ -69,7 +79,6 @@ CREATE TABLE pbd.Despacho (
     EntradaSaida BOOLEAN,
     Data DATETIME,
     CpfRg VARCHAR(32),
-	PRIMARY KEY(EntradaSaida),
 	FOREIGN KEY(cpfUsuario) REFERENCES pbd.Usuario (CPF),
 	FOREIGN KEY(codigoCentro) REFERENCES pbd.Centro (Codigo),
 	FOREIGN KEY(codigoObjeto) REFERENCES pbd.Objetos (Codigo)
@@ -81,6 +90,17 @@ INSERT INTO pbd.centro VALUES ('SC01', 'Centro, 152', 'Florianopolis', 'SC', '(4
 INSERT INTO pbd.centro VALUES ('PR01', 'Centro, 152', 'Curitiba', 'PR', '(44) 3222-5678');
 INSERT INTO pbd.centro VALUES ('SP01', 'Centro, 152', 'Sao Paulo', 'SP', '(11) 3222-5678');
 INSERT INTO pbd.centro VALUES ('RJ01', 'Centro, 152', 'Rio de Janeiro', 'RJ', '(11) 3222-5678');
+
+INSERT INTO pbd.Distancia_Centro VALUES ('RS01', 'SC01', 713);
+INSERT INTO pbd.Distancia_Centro VALUES ('RS01', 'PR01', 992);
+INSERT INTO pbd.Distancia_Centro VALUES ('RS01', 'SP01', 1340);
+INSERT INTO pbd.Distancia_Centro VALUES ('RS01', 'RJ01', 1820);
+INSERT INTO pbd.Distancia_Centro VALUES ('SC01', 'PR01', 306);
+INSERT INTO pbd.Distancia_Centro VALUES ('SC01', 'SP01', 694);
+INSERT INTO pbd.Distancia_Centro VALUES ('SC01', 'RJ01', 1134);
+INSERT INTO pbd.Distancia_Centro VALUES ('PR01', 'SP01', 416);
+INSERT INTO pbd.Distancia_Centro VALUES ('PR01', 'RJ01', 856);
+INSERT INTO pbd.Distancia_Centro VALUES ('SP01', 'RJ01', 434);
 
 INSERT INTO pbd.usuario VALUES ('000-111-222-01', 'admin', 'Jose', 'Laranjal, 100', '(53) 99245-1234', 0, 'RS01');
 INSERT INTO pbd.usuario VALUES ('000-111-222-02', 'admin', 'Aline', 'Laranjal, 100', '(53) 99245-1234', 1, 'RS01');
@@ -98,4 +118,14 @@ INSERT INTO pbd.objetos VALUES ('OB0011223349', 'Abel', '(53) 99122-5641', 'Cent
 INSERT INTO pbd.objetos VALUES ('OB0011223350', 'Abel', '(53) 99122-5641', 'Centro, 8', 'Pelotas', 'RS', 'RS01', '2023-08-05 08:00:00', 'Centro, 55', 'Curitiba', 'PR');
 INSERT INTO pbd.objetos VALUES ('OB0011223351', 'Abel', '(53) 99122-5641', 'Centro, 8', 'Pelotas', 'RS', 'RS01', '2023-08-05 08:00:00', 'Centro, 55', 'Curitiba', 'PR');
 
+INSERT INTO pbd.Transporte VALUES (true, '2023-08-05 08:30:00', 'RS01', '000-111-222-02');
+INSERT INTO pbd.Transporte VALUES (false, '2023-08-05 08:30:00', 'SP01', '000-111-222-02');
+INSERT INTO pbd.Transporte VALUES (true, '2023-08-09 08:30:00', 'RS01', '000-111-222-03');
+INSERT INTO pbd.Transporte VALUES (false, '2023-08-09 08:30:00', 'SC01', '000-111-222-03');
+INSERT INTO pbd.Transporte VALUES (true, '2023-08-01 08:30:00', 'RS01', '000-111-222-04');
+INSERT INTO pbd.Transporte VALUES (false, '2023-08-01 08:30:00', 'PR01', '000-111-222-04');
+INSERT INTO pbd.Transporte VALUES (true, '2023-08-07 08:30:00', 'SC01', '000-111-222-05');
+INSERT INTO pbd.Transporte VALUES (false, '2023-08-07 08:30:00', 'RS01', '000-111-222-05');
+INSERT INTO pbd.Transporte VALUES (true, '2023-08-10 08:30:00', 'PR01', '000-111-222-06');
+INSERT INTO pbd.Transporte VALUES (false, '2023-08-10 08:30:00', 'RS01', '000-111-222-06');
 

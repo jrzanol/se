@@ -33,6 +33,9 @@
     <ClInclude Include="pch.h">
       <Filter>Arquivos de Cabeçalho</Filter>
     </ClInclude>
+    <ClInclude Include="seListDlg.h">
+      <Filter>Arquivos de Cabeçalho</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="se.cpp">
@@ -42,7 +45,10 @@
       <Filter>Arquivos de Origem</Filter>
     </ClCompile>
     <ClCompile Include="seDlg.cpp">
-      <Filter>Arquivos de Recurso</Filter>
+      <Filter>Arquivos de Origem</Filter>
+    </ClCompile>
+    <ClCompile Include="seListDlg.cpp">
+      <Filter>Arquivos de Origem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -52,7 +52,10 @@ private:
 
 	SqlRes SqlQuery(const char*, ...);
 
+	char m_CPF[32];
 	char m_CenterCode[16];
+	char m_SelectedCidDest[32];
+	char m_SelectedEstDest[32];
 
 	void RefreshLists();
 	void RefreshObjects();
@@ -92,4 +95,9 @@ public:
 	CButton m_SendButton;
 	CButton m_RemoveSelButton;
 	CButton m_RemoveAllButton;
+	afx_msg void OnLbnSelchangeListdestino();
+	CButton m_TransOutButton;
+	CButton m_TransInButton;
+	afx_msg void OnBnClickedTransoutbutton();
+	afx_msg void OnBnClickedTransinbutton();
 };

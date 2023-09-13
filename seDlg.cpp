@@ -7,6 +7,7 @@
 #include "se.h"
 #include "seDlg.h"
 #include "afxdialogex.h"
+#include "seListDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -72,6 +73,8 @@ void CseDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_SENDBUTTON, m_SendButton);
 	DDX_Control(pDX, IDC_REMSELBUTTON, m_RemoveSelButton);
 	DDX_Control(pDX, IDC_REMALLBUTTON, m_RemoveAllButton);
+	DDX_Control(pDX, IDC_TRANSOUTBUTTON, m_TransOutButton);
+	DDX_Control(pDX, IDC_TRANSINBUTTON, m_TransInButton);
 }
 
 BEGIN_MESSAGE_MAP(CseDlg, CDialogEx)
@@ -86,6 +89,9 @@ BEGIN_MESSAGE_MAP(CseDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_SENDBUTTON, &CseDlg::OnBnClickedSendbutton)
 	ON_BN_CLICKED(IDC_REMSELBUTTON, &CseDlg::OnBnClickedRemselbutton)
 	ON_BN_CLICKED(IDC_REMALLBUTTON, &CseDlg::OnBnClickedRemallbutton)
+	ON_LBN_SELCHANGE(IDC_LISTDESTINO, &CseDlg::OnLbnSelchangeListdestino)
+	ON_BN_CLICKED(IDC_TRANSOUTBUTTON, &CseDlg::OnBnClickedTransoutbutton)
+	ON_BN_CLICKED(IDC_TRANSINBUTTON, &CseDlg::OnBnClickedTransinbutton)
 END_MESSAGE_MAP()
 
 
@@ -224,11 +230,18 @@ HCURSOR CseDlg::OnQueryDragIcon()
 
 void CseDlg::RefreshLists()
 {
-	SqlRes mot = SqlQuery("SELECT CPF,Nome FROM Usuario WHERE codigoCentro='%s' AND TipoUsuario=1", m_CenterCode);
+	m_Motoristas.ResetContent();
+	m_Destinos.ResetContent();
+
+	SqlRes mot = SqlQuery(
+		"SELECT U.CPF, U.Nome FROM Usuario U\n"
+		"JOIN Transporte T ON U.CPF=T.cpfMotorista\n"
+		"WHERE U.codigoCentro='%s' AND U.TipoUsuario=1\n"
+		"ORDER BY T.DataSaida",
+		m_CenterCode);
 
 	if (mot.CheckResult())
 	{
-		m_Motoristas.ResetContent();
 		int index = 0;
 
 		do
@@ -238,22 +251,33 @@ void CseDlg::RefreshLists()
 
 			m_Motoristas.InsertString(index++, item);
 		} while (mot.Res->next());
+
+		if (m_Motoristas.GetCount() > 0)
+			m_Motoristas.SetCurSel(0);
 	}
 
-	SqlRes dest = SqlQuery("SELECT Codigo,Cidade FROM Centro");
+	SqlRes dest = SqlQuery(
+		"SELECT C.Codigo, C.Cidade, C.Estado\n"
+		"FROM Distancia_Centro DC\n"
+		"JOIN Centro C ON ((codigoCentro1!='%s' AND C.Codigo=codigoCentro1) OR (codigoCentro2!='%s' AND C.Codigo=codigoCentro2))\n"
+		"WHERE codigoCentro1='%s' OR codigoCentro2='%s'\n"
+		"ORDER BY Distancia ASC",
+		m_CenterCode, m_CenterCode, m_CenterCode, m_CenterCode);
 
 	if (dest.CheckResult())
 	{
-		m_Destinos.ResetContent();
 		int index = 0;
 
 		do
 		{
 			char item[256];
-			sprintf(item, "%s %s", dest.Res->getString("Codigo").c_str(), dest.Res->getString("Cidade").c_str());
+			sprintf(item, "%s %s,%s", dest.Res->getString("Codigo").c_str(), dest.Res->getString("Cidade").c_str(), dest.Res->getString("Estado").c_str());
 
 			m_Destinos.InsertString(index++, item);
 		} while (dest.Res->next());
+
+		if (m_Destinos.GetCount() > 0)
+			m_Destinos.SetCurSel(0);
 	}
 
 	RefreshObjects();
@@ -261,11 +285,12 @@ void CseDlg::RefreshLists()
 
 void CseDlg::RefreshObjects()
 {
-	SqlRes objs = SqlQuery("SELECT Codigo, CidadeDestino, EstadoDestino FROM Objetos WHERE codigoCentro='%s'", m_CenterCode);
+	SqlRes objs = SqlQuery("SELECT Codigo, CidadeDestino, EstadoDestino FROM Objetos WHERE codigoCentro='%s' ORDER BY EstadoDestino='%s' DESC", m_CenterCode, m_SelectedEstDest);
+
+	m_Objetos.ResetContent();
 
 	if (objs.CheckResult())
 	{
-		m_Objetos.ResetContent();
 		int index = 0;
 
 		char cod[32];
@@ -304,13 +329,12 @@ void CseDlg::RefreshObjects()
 
 void CseDlg::OnBnClickedLoginbutton()
 {
-	char cpf[32];
 	char pwd[32];
 
-	m_CpfTxt.GetWindowTextA(cpf, sizeof(cpf));
+	m_CpfTxt.GetWindowTextA(m_CPF, sizeof(m_CPF));
 	m_PwdTxt.GetWindowTextA(pwd, sizeof(pwd));
 
-	SqlRes res = SqlQuery("SELECT * FROM Usuario WHERE CPF='%s' AND Senha='%s'", cpf, pwd);
+	SqlRes res = SqlQuery("SELECT * FROM Usuario WHERE CPF='%s' AND Senha='%s'", m_CPF, pwd);
 
 	if (res.CheckResult())
 	{
@@ -335,6 +359,9 @@ void CseDlg::OnBnClickedLoginbutton()
 
 		m_CodigoTxt.Clear();
 		m_DestinoTxt.Clear();
+
+		m_TransInButton.EnableWindow();
+		m_TransOutButton.EnableWindow();
 
 		RefreshLists();
 	}
@@ -414,9 +441,22 @@ void CseDlg::OnBnClickedSendbutton()
 			char dateTime[64];
 			sprintf(dateTime, "%d-%d-%d %d:%d:%d", now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
 
-			SqlQuery("INSERT INTO Transporte VALUES ('%s', '%s', '%s')", dateTime, m_CenterCode, motCpf);
+			SqlQuery("INSERT INTO Transporte VALUES (true, '%s', '%s', '%s')", dateTime, m_CenterCode, motCpf);
+			SqlQuery("UPDATE Usuario SET codigoCentro=NULL WHERE CPF='%s'", motCpf);
 
-			//SqlQuery("INSERT INTO Transporte_Objetos VALUES ('%s', '%s', '%s')", dateTime, )
+			for (int Id = 0; Id < m_ObjectSend.GetCount(); ++Id)
+			{
+				char objStr[256], objCod[32];
+				m_ObjectSend.GetText(Id, objStr);
+
+				if (sscanf(objStr, "%s", objCod) == 1)
+				{
+					SqlQuery("INSERT INTO Transporte_Objetos VALUES ('%s', '%s', '%s')", dateTime, objCod, m_CenterCode);
+					SqlQuery("UPDATE Objetos SET codigoCentro=NULL WHERE Codigo='%s'", objCod);
+
+					SqlQuery("INSERT INTO Despacho VALUES ('%s', '%s', '%s', true, '%s', NULL)", m_CPF, m_CenterCode, objCod, dateTime);
+				}
+			}
 
 			m_ObjectSend.ResetContent();
 
@@ -487,4 +527,49 @@ void CseDlg::OnBnClickedRemallbutton()
 		m_ObjectSend.SetSel(Id);
 
 	OnBnClickedRemselbutton();
+
+	// Corrige caso tenha algum problema de sincronia:
+	for (int Id = 0; Id < m_Objetos.GetCount(); ++Id)
+	{
+		if (m_Objetos.GetSel(Id) == 1)
+			m_Objetos.SetSel(Id, 0);
+	}
+}
+
+void CseDlg::OnLbnSelchangeListdestino()
+{
+	int Id = m_Destinos.GetCurSel();
+	if (Id >= 0)
+	{
+		char item[256];
+		m_Destinos.GetText(Id, item);
+
+		(void)sscanf(item, "%*s %[^,],%s", m_SelectedCidDest, m_SelectedEstDest);
+
+		RefreshObjects();
+	}
+}
+
+void CseDlg::OnBnClickedTransoutbutton()
+{
+	CseListDlg fw(this);
+	fw.m_StrList.clear();
+
+	/*
+	SELECT *
+	FROM Transporte T
+	INNER JOIN Usuario U ON U.CPF=T.cpfMotorista
+	INNER JOIN (SELECT DataSaida, codigoCentro FROM Transporte WHERE Saida=1) TD ON TD.DataSaida=T.DataSaida
+	WHERE T.Saida=0 AND T.codigoCentro='RS01'
+	*/
+
+	fw.DoModal();
+}
+
+void CseDlg::OnBnClickedTransinbutton()
+{
+	CseListDlg fw(this);
+	fw.m_StrList.clear();
+
+	fw.DoModal();
 }
