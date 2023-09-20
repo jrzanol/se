@@ -18,6 +18,7 @@ public:
 #endif
 
 	std::list<std::string> m_StrList;
+	void AddStrListString(const char*, ...);
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // Suporte DDX/DDV

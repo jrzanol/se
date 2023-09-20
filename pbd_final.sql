@@ -1,5 +1,8 @@
 /*	Sistema de Entregas.
 	Grupo 7 - Ronei Â. Zanol Júnior.
+	
+	SGBD: MySQL
+	GitHub: https://github.com/jrzanol/se
 */
 
 /* Limpa o Banco de Dados. */
@@ -117,6 +120,27 @@ INSERT INTO pbd.objetos VALUES ('OB0011223348', 'Abel', '(53) 99122-5641', 'Cent
 INSERT INTO pbd.objetos VALUES ('OB0011223349', 'Abel', '(53) 99122-5641', 'Centro, 8', 'Pelotas', 'RS', 'RS01', '2023-08-05 08:00:00', 'Centro, 55', 'Curitiba', 'PR');
 INSERT INTO pbd.objetos VALUES ('OB0011223350', 'Abel', '(53) 99122-5641', 'Centro, 8', 'Pelotas', 'RS', 'RS01', '2023-08-05 08:00:00', 'Centro, 55', 'Curitiba', 'PR');
 INSERT INTO pbd.objetos VALUES ('OB0011223351', 'Abel', '(53) 99122-5641', 'Centro, 8', 'Pelotas', 'RS', 'RS01', '2023-08-05 08:00:00', 'Centro, 55', 'Curitiba', 'PR');
+INSERT INTO pbd.objetos VALUES ('OB0011223352', 'Fabio', '(53) 99122-5641', 'Centro, 8', 'Pelotas', 'RS', 'RS01', '2023-08-05 08:00:00', 'Centro, 55', 'Sao Paulo', 'SP');
+INSERT INTO pbd.objetos VALUES ('OB0011223353', 'Fabio', '(53) 99122-5641', 'Centro, 8', 'Pelotas', 'RS', 'RS01', '2023-08-05 08:00:00', 'Centro, 55', 'Sao Paulo', 'SP');
+INSERT INTO pbd.objetos VALUES ('OB0011223354', 'Fabio', '(53) 99122-5641', 'Centro, 8', 'Pelotas', 'RS', 'RS01', '2023-08-05 08:00:00', 'Centro, 55', 'Sao Paulo', 'SP');
+INSERT INTO pbd.objetos VALUES ('OB0011223355', 'Fabio', '(53) 99122-5641', 'Centro, 8', 'Pelotas', 'RS', 'RS01', '2023-08-05 08:00:00', 'Centro, 55', 'Sao Paulo', 'SP');
+INSERT INTO pbd.objetos VALUES ('OB0011223356', 'Fabio', '(53) 99122-5641', 'Centro, 8', 'Pelotas', 'RS', 'RS01', '2023-08-05 08:00:00', 'Centro, 55', 'Sao Paulo', 'SP');
+INSERT INTO pbd.objetos VALUES ('OB0011223357', 'Fabio', '(53) 99122-5641', 'Centro, 8', 'Pelotas', 'RS', 'RS01', '2023-08-05 08:00:00', 'Centro, 55', 'Sao Paulo', 'SP');
+INSERT INTO pbd.objetos VALUES ('OB0011223358', 'Fabio', '(53) 99122-5641', 'Centro, 8', 'Pelotas', 'RS', 'RS01', '2023-08-05 08:00:00', 'Centro, 55', 'Sao Paulo', 'SP');
+INSERT INTO pbd.objetos VALUES ('OB0011223359', 'Fabio', '(53) 99122-5641', 'Centro, 8', 'Pelotas', 'RS', 'RS01', '2023-08-05 08:00:00', 'Centro, 55', 'Sao Paulo', 'SP');
+INSERT INTO pbd.objetos VALUES ('OB0011223360', 'Fabio', '(53) 99122-5641', 'Centro, 8', 'Pelotas', 'RS', 'RS01', '2023-08-05 08:00:00', 'Centro, 55', 'Sao Paulo', 'SP');
+INSERT INTO pbd.objetos VALUES ('OB0011223361', 'Fabio', '(53) 99122-5641', 'Centro, 8', 'Pelotas', 'RS', 'RS01', '2023-08-05 08:00:00', 'Centro, 55', 'Sao Paulo', 'SP');
+INSERT INTO pbd.objetos VALUES ('OB0011223362', 'Fabio', '(53) 99122-5641', 'Centro, 8', 'Pelotas', 'RS', 'RS01', '2023-08-05 08:00:00', 'Centro, 55', 'Sao Paulo', 'SP');
+INSERT INTO pbd.objetos VALUES ('OB0011223363', 'Alberto', '(53) 99122-5641', 'Centro, 8', 'Pelotas', 'RS', 'RS01', '2023-08-05 08:00:00', 'Centro, 55', 'Rio de Janeiro', 'RJ');
+INSERT INTO pbd.objetos VALUES ('OB0011223364', 'Alberto', '(53) 99122-5641', 'Centro, 8', 'Pelotas', 'RS', 'RS01', '2023-08-05 08:00:00', 'Centro, 55', 'Rio de Janeiro', 'RJ');
+INSERT INTO pbd.objetos VALUES ('OB0011223365', 'Alberto', '(53) 99122-5641', 'Centro, 8', 'Pelotas', 'RS', 'RS01', '2023-08-05 08:00:00', 'Centro, 55', 'Rio de Janeiro', 'RJ');
+INSERT INTO pbd.objetos VALUES ('OB0011223366', 'Alberto', '(53) 99122-5641', 'Centro, 8', 'Pelotas', 'RS', 'RS01', '2023-08-05 08:00:00', 'Centro, 55', 'Rio de Janeiro', 'RJ');
+INSERT INTO pbd.objetos VALUES ('OB0011223367', 'Alberto', '(53) 99122-5641', 'Centro, 8', 'Pelotas', 'RS', 'RS01', '2023-08-05 08:00:00', 'Centro, 55', 'Rio de Janeiro', 'RJ');
+INSERT INTO pbd.objetos VALUES ('OB0011223368', 'Alberto', '(53) 99122-5641', 'Centro, 8', 'Pelotas', 'RS', 'RS01', '2023-08-05 08:00:00', 'Centro, 55', 'Rio de Janeiro', 'RJ');
+INSERT INTO pbd.objetos VALUES ('OB0011223369', 'Alberto', '(53) 99122-5641', 'Centro, 8', 'Pelotas', 'RS', 'RS01', '2023-08-05 08:00:00', 'Centro, 55', 'Rio de Janeiro', 'RJ');
+INSERT INTO pbd.objetos VALUES ('OB0011223370', 'Alberto', '(53) 99122-5641', 'Centro, 8', 'Pelotas', 'RS', 'RS01', '2023-08-05 08:00:00', 'Centro, 55', 'Rio de Janeiro', 'RJ');
+INSERT INTO pbd.objetos VALUES ('OB0011223371', 'Alberto', '(53) 99122-5641', 'Centro, 8', 'Pelotas', 'RS', 'RS01', '2023-08-05 08:00:00', 'Centro, 55', 'Rio de Janeiro', 'RJ');
+INSERT INTO pbd.objetos VALUES ('OB0011223372', 'Alberto', '(53) 99122-5641', 'Centro, 8', 'Pelotas', 'RS', 'RS01', '2023-08-05 08:00:00', 'Centro, 55', 'Rio de Janeiro', 'RJ');
 
 INSERT INTO pbd.Transporte VALUES (true, '2023-08-05 08:30:00', 'RS01', '000-111-222-02');
 INSERT INTO pbd.Transporte VALUES (false, '2023-08-05 08:30:00', 'SP01', '000-111-222-02');

@@ -45,3 +45,15 @@ BOOL CseListDlg::OnInitDialog()
 
 	return TRUE;
 }
+
+void CseListDlg::AddStrListString(const char* str, ...)
+{
+	char buf[1024];
+
+	va_list arglist;
+	va_start(arglist, str);
+	vsprintf(buf, str, arglist);
+	va_end(arglist);
+
+	m_StrList.push_back(buf);
+}

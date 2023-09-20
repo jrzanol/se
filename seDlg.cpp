@@ -235,9 +235,7 @@ void CseDlg::RefreshLists()
 
 	SqlRes mot = SqlQuery(
 		"SELECT U.CPF, U.Nome FROM Usuario U\n"
-		"JOIN Transporte T ON U.CPF=T.cpfMotorista\n"
-		"WHERE U.codigoCentro='%s' AND U.TipoUsuario=1\n"
-		"ORDER BY T.DataSaida",
+		"WHERE U.codigoCentro='%s' AND U.TipoUsuario=1",
 		m_CenterCode);
 
 	if (mot.CheckResult())
@@ -435,33 +433,40 @@ void CseDlg::OnBnClickedSendbutton()
 
 		if (sscanf(motStr, "%s", motCpf) == 1)
 		{
-			time_t rawnow = time(0);
-			tm* now = localtime(&rawnow);
+			char destStr[256], destCenter[32];
+			m_Destinos.GetText(destId, destStr);
 
-			char dateTime[64];
-			sprintf(dateTime, "%d-%d-%d %d:%d:%d", now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
-
-			SqlQuery("INSERT INTO Transporte VALUES (true, '%s', '%s', '%s')", dateTime, m_CenterCode, motCpf);
-			SqlQuery("UPDATE Usuario SET codigoCentro=NULL WHERE CPF='%s'", motCpf);
-
-			for (int Id = 0; Id < m_ObjectSend.GetCount(); ++Id)
+			if (sscanf(destStr, "%s", destCenter) == 1)
 			{
-				char objStr[256], objCod[32];
-				m_ObjectSend.GetText(Id, objStr);
+				time_t rawnow = time(0);
+				tm* now = localtime(&rawnow);
 
-				if (sscanf(objStr, "%s", objCod) == 1)
+				char dateTime[64];
+				sprintf(dateTime, "%d-%d-%d %d:%d:%d", now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
+
+				SqlQuery("INSERT INTO Transporte VALUES (true, '%s', '%s', '%s')", dateTime, m_CenterCode, motCpf);
+				SqlQuery("INSERT INTO Transporte VALUES (false, '%s', '%s', '%s')", dateTime, destCenter, motCpf);
+				SqlQuery("UPDATE Usuario SET codigoCentro=NULL WHERE CPF='%s'", motCpf);
+
+				for (int Id = 0; Id < m_ObjectSend.GetCount(); ++Id)
 				{
-					SqlQuery("INSERT INTO Transporte_Objetos VALUES ('%s', '%s', '%s')", dateTime, objCod, m_CenterCode);
-					SqlQuery("UPDATE Objetos SET codigoCentro=NULL WHERE Codigo='%s'", objCod);
+					char objStr[256], objCod[32];
+					m_ObjectSend.GetText(Id, objStr);
 
-					SqlQuery("INSERT INTO Despacho VALUES ('%s', '%s', '%s', true, '%s', NULL)", m_CPF, m_CenterCode, objCod, dateTime);
+					if (sscanf(objStr, "%s", objCod) == 1)
+					{
+						SqlQuery("INSERT INTO Transporte_Objetos VALUES (1, '%s', '%s', '%s')", dateTime, objCod, m_CenterCode);
+						SqlQuery("UPDATE Objetos SET codigoCentro=NULL WHERE Codigo='%s'", objCod);
+
+						SqlQuery("INSERT INTO Despacho VALUES ('%s', '%s', '%s', true, '%s', NULL)", m_CPF, m_CenterCode, objCod, dateTime);
+					}
 				}
+
+				m_ObjectSend.ResetContent();
+
+				RefreshLists();
+				RefreshObjects();
 			}
-
-			m_ObjectSend.ResetContent();
-
-			RefreshLists();
-			RefreshObjects();
 		}
 	}
 	else
@@ -555,13 +560,28 @@ void CseDlg::OnBnClickedTransoutbutton()
 	CseListDlg fw(this);
 	fw.m_StrList.clear();
 
-	/*
-	SELECT *
-	FROM Transporte T
-	INNER JOIN Usuario U ON U.CPF=T.cpfMotorista
-	INNER JOIN (SELECT DataSaida, codigoCentro FROM Transporte WHERE Saida=1) TD ON TD.DataSaida=T.DataSaida
-	WHERE T.Saida=0 AND T.codigoCentro='RS01'
-	*/
+	SqlRes res = SqlQuery(
+		"SELECT U.Nome, C.Cidade, C.Estado, T.DataSaida\n"
+		"FROM Transporte T\n"
+		"INNER JOIN Usuario U ON U.CPF = T.cpfMotorista\n"
+		"INNER JOIN(SELECT DataSaida, codigoCentro FROM Transporte WHERE Saida = 0) TD ON TD.DataSaida = T.DataSaida\n"
+		"INNER JOIN Centro C ON C.Codigo=TD.codigoCentro\n"
+		"WHERE T.Saida = 1 AND T.codigoCentro = '%s';", m_CenterCode);
+
+	if (res.CheckResult())
+	{
+		int transCounter = 1;
+
+		do
+		{
+			fw.AddStrListString("Transporte %d:", transCounter);
+			fw.AddStrListString("\tMotorista: %s", res.Res->getString("Nome").c_str());
+			fw.AddStrListString("\tDestino: %s, %s", res.Res->getString("Cidade").c_str(), res.Res->getString("Estado").c_str());
+			fw.AddStrListString("\tData da Saida: %s\n", res.Res->getString("DataSaida").c_str());
+
+			transCounter++;
+		} while (res.Res->next());
+	}
 
 	fw.DoModal();
 }
@@ -570,6 +590,29 @@ void CseDlg::OnBnClickedTransinbutton()
 {
 	CseListDlg fw(this);
 	fw.m_StrList.clear();
+
+	SqlRes res = SqlQuery(
+		"SELECT U.Nome, C.Cidade, C.Estado, T.DataSaida\n"
+		"FROM Transporte T\n"
+		"INNER JOIN Usuario U ON U.CPF = T.cpfMotorista\n"
+		"INNER JOIN(SELECT DataSaida, codigoCentro FROM Transporte WHERE Saida = 1) TD ON TD.DataSaida = T.DataSaida\n"
+		"INNER JOIN Centro C ON C.Codigo=TD.codigoCentro\n"
+		"WHERE T.Saida = 0 AND T.codigoCentro = '%s';", m_CenterCode);
+
+	if (res.CheckResult())
+	{
+		int transCounter = 1;
+
+		do
+		{
+			fw.AddStrListString("Transporte %d:", transCounter);
+			fw.AddStrListString("\tMotorista: %s", res.Res->getString("Nome").c_str());
+			fw.AddStrListString("\tDestino: %s, %s", res.Res->getString("Cidade").c_str(), res.Res->getString("Estado").c_str());
+			fw.AddStrListString("\tData da Saida: %s\n", res.Res->getString("DataSaida").c_str());
+
+			transCounter++;
+		} while (res.Res->next());
+	}
 
 	fw.DoModal();
 }
