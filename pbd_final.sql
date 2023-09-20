@@ -153,3 +153,44 @@ INSERT INTO pbd.Transporte VALUES (false, '2023-08-07 08:30:00', 'RS01', '000-11
 INSERT INTO pbd.Transporte VALUES (true, '2023-08-10 08:30:00', 'PR01', '000-111-222-06');
 INSERT INTO pbd.Transporte VALUES (false, '2023-08-10 08:30:00', 'RS01', '000-111-222-06');
 
+/* Operações feitas na aplicação: */
+
+/*
+
+SELECT U.CPF, U.Nome FROM Usuario U
+WHERE U.codigoCentro='%s' AND U.TipoUsuario=1
+
+SELECT C.Codigo, C.Cidade, C.Estado
+FROM Distancia_Centro DC
+JOIN Centro C ON ((codigoCentro1!='%s' AND C.Codigo=codigoCentro1) OR (codigoCentro2!='%s' AND C.Codigo=codigoCentro2))
+WHERE codigoCentro1='%s' OR codigoCentro2='%s'
+ORDER BY Distancia ASC
+
+SELECT Codigo, CidadeDestino, EstadoDestino FROM Objetos WHERE codigoCentro='%s' ORDER BY EstadoDestino='%s' DESC
+
+SELECT * FROM Usuario WHERE CPF='%s' AND Senha='%s'
+
+INSERT INTO Transporte VALUES (true, '%s', '%s', '%s')
+INSERT INTO Transporte VALUES (false, '%s', '%s', '%s')
+UPDATE Usuario SET codigoCentro=NULL WHERE CPF='%s'
+
+INSERT INTO Transporte_Objetos VALUES (1, '%s', '%s', '%s')
+UPDATE Objetos SET codigoCentro=NULL WHERE Codigo='%s'
+
+INSERT INTO Despacho VALUES ('%s', '%s', '%s', true, '%s', NULL)
+
+SELECT U.Nome, C.Cidade, C.Estado, T.DataSaida
+FROM Transporte T
+INNER JOIN Usuario U ON U.CPF = T.cpfMotorista
+INNER JOIN(SELECT DataSaida, codigoCentro FROM Transporte WHERE Saida = 0) TD ON TD.DataSaida = T.DataSaida
+INNER JOIN Centro C ON C.Codigo=TD.codigoCentro
+WHERE T.Saida = 1 AND T.codigoCentro = '%s';
+
+SELECT U.Nome, C.Cidade, C.Estado, T.DataSaida
+FROM Transporte T
+INNER JOIN Usuario U ON U.CPF = T.cpfMotorista
+INNER JOIN(SELECT DataSaida, codigoCentro FROM Transporte WHERE Saida = 1) TD ON TD.DataSaida = T.DataSaida
+INNER JOIN Centro C ON C.Codigo=TD.codigoCentro
+WHERE T.Saida = 0 AND T.codigoCentro = '%s';
+
+*/
